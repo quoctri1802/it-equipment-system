@@ -11,6 +11,7 @@ export default function Sidebar({ activeTab, setActiveTab, user, sidebarOpen, se
     { id: 'warranty', label: 'Bảo hành & Hợp đồng', icon: '🛡️', roles: ['admin', 'director', 'accountant', 'itstaff'] },
     { id: 'inventory', label: 'Kho linh kiện & Vật tư', icon: '📦', roles: ['admin', 'accountant', 'itstaff'] },
     { id: 'personnel', label: 'Nhân sự & Phân công', icon: '👨‍⚕️', roles: ['admin', 'director', 'itstaff'] },
+    { id: 'departments', label: 'Danh mục khoa, phòng', icon: '🏢', roles: ['admin', 'director'] },
     { id: 'users', label: 'Quản lý người dùng', icon: '👥', roles: ['admin'] },
     { id: 'audit', label: 'Nhật ký thao tác', icon: '📜', roles: ['admin', 'director'] },
   ];

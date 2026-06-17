@@ -155,6 +155,33 @@ export async function GET(request) {
       ? parseFloat((completedPm / (completedPm + resolvedCm)) * 100).toFixed(1)
       : 100;
 
+    // 13. Support Requests statistics
+    const supportStats = await query(`
+      SELECT 
+        COUNT(*) as total_requests,
+        COUNT(CASE WHEN status = 'submitted' THEN 1 END) as submitted_count,
+        COUNT(CASE WHEN status = 'approved' THEN 1 END) as approved_count,
+        COUNT(CASE WHEN status = 'processing' THEN 1 END) as processing_count,
+        COUNT(CASE WHEN status = 'completed' THEN 1 END) as completed_count,
+        COUNT(CASE WHEN status = 'rejected' THEN 1 END) as rejected_count
+      FROM support_requests
+    `);
+
+    const supportTypeBreakdown = await query(`
+      SELECT request_type, COUNT(*) as count
+      FROM support_requests
+      GROUP BY request_type
+    `);
+
+    const supportRequestsList = await query(`
+      SELECT sr.*, d.name as device_name, d.asset_code, u.name as requester_name, a.name as assignee_name
+      FROM support_requests sr
+      LEFT JOIN devices d ON sr.device_id = d.id
+      LEFT JOIN users u ON sr.requester_id = u.id
+      LEFT JOIN users a ON sr.assigned_to = a.id
+      ORDER BY sr.created_at DESC
+    `);
+
     return new Response(JSON.stringify({
       success: true,
       data: {
@@ -168,6 +195,9 @@ export async function GET(request) {
         topFailingDevices: topFailingDevices.rows,
         incidentTrend: incidentTrend.rows,
         consumablesSummary: consumablesSummary.rows,
+        supportStats: supportStats.rows[0],
+        supportTypeBreakdown: supportTypeBreakdown.rows,
+        supportRequestsList: supportRequestsList.rows,
         performanceMetrics: {
           mttrHours: mttrRes.rows[0]?.avg_repair_hours ? parseFloat(mttrRes.rows[0].avg_repair_hours).toFixed(1) : 0,
           mtbfDays: mtbfRes.rows[0]?.avg_uptime_days ? parseFloat(mtbfRes.rows[0].avg_uptime_days).toFixed(1) : 180,

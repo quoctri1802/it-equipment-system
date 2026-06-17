@@ -35,6 +35,7 @@ export default function DeviceLifecycle({ user }) {
   const [consumables, setConsumables] = useState([]);
   const [staffList, setStaffList] = useState([]);
   const [contracts, setContracts] = useState([]);
+  const [departments, setDepartments] = useState([]);
 
   // Filter for maintenance tab
   const [maintFilter, setMaintFilter] = useState('planned'); // planned, completed
@@ -77,18 +78,24 @@ export default function DeviceLifecycle({ user }) {
 
   const loadData = async () => {
     try {
+      const isGlobalManager = ['admin', 'director', 'accountant', 'itstaff'].includes(user?.role);
+      const userDept = user?.department || '';
+
       // Load devices
-      const devRes = await fetch('/api/devices');
+      const devUrl = isGlobalManager ? '/api/devices' : `/api/devices?location=${encodeURIComponent(userDept)}`;
+      const devRes = await fetch(devUrl);
       const devJson = await devRes.json();
       if (devJson.success) setDevices(devJson.devices);
 
       // Load incidents
-      const incRes = await fetch('/api/incidents');
+      const incUrl = isGlobalManager ? '/api/incidents' : `/api/incidents?department=${encodeURIComponent(userDept)}`;
+      const incRes = await fetch(incUrl);
       const incJson = await incRes.json();
       if (incJson.success) setIncidents(incJson.incidents);
 
       // Load maintenance
-      const maintRes = await fetch('/api/maintenance');
+      const maintUrl = isGlobalManager ? '/api/maintenance' : `/api/maintenance?department=${encodeURIComponent(userDept)}`;
+      const maintRes = await fetch(maintUrl);
       const maintJson = await maintRes.json();
       if (maintJson.success) setMaintenancePlans(maintJson.plans);
 
@@ -106,6 +113,11 @@ export default function DeviceLifecycle({ user }) {
       const contractsRes = await fetch('/api/contracts');
       const contractsJson = await contractsRes.json();
       if (contractsJson.success) setContracts(contractsJson.contracts);
+
+      // Load departments
+      const deptsRes = await fetch('/api/departments');
+      const deptsJson = await deptsRes.json();
+      if (deptsJson.success) setDepartments(deptsJson.departments);
 
     } catch (e) {
       console.error(e);
@@ -433,7 +445,17 @@ export default function DeviceLifecycle({ user }) {
 
               <div className="form-group">
                 <label className="form-label">Đến khoa / phòng khám mới *</label>
-                <input type="text" required className="form-control" placeholder="Khoa Cấp Cứu / Phòng Hành Chính" value={targetDept} onChange={e => setTargetDept(e.target.value)} />
+                <select 
+                  required 
+                  className="form-control" 
+                  value={targetDept} 
+                  onChange={e => setTargetDept(e.target.value)}
+                >
+                  <option value="">-- Chọn khoa/phòng ban --</option>
+                  {departments.map(d => (
+                    <option key={d.id} value={d.name}>{d.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div className="form-group">

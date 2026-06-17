@@ -244,6 +244,13 @@ export default function Reports({ user }) {
         >
           📦 Báo cáo Linh kiện & Tồn kho
         </button>
+        <button 
+          className={`btn ${activeTab === 'support' ? 'btn-primary' : 'btn-secondary'}`}
+          style={{ borderBottomLeftRadius: 0, borderBottomRightRadius: 0, padding: '10px 18px' }}
+          onClick={() => setActiveTab('support')}
+        >
+          📱 Phiếu yêu cầu & Hỗ trợ
+        </button>
       </div>
 
       {/* TAB SUB-PAGES */}
@@ -880,6 +887,261 @@ export default function Reports({ user }) {
                   })}
                 </tbody>
               </table>
+            </div>
+
+          </div>
+        )}
+
+        {/* SUB-TAB 5: SUPPORT REQUESTS REPORT */}
+        {activeTab === 'support' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: 800 }}>Báo cáo Phiếu yêu cầu & Hỗ trợ dịch vụ</h3>
+                <p style={{ color: 'var(--text-secondary)' }}>Thống kê số lượng, tiến độ và tỷ lệ xử lý các phiếu yêu cầu tự phục vụ.</p>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button className="btn btn-secondary" onClick={() => {
+                  const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(
+                    ["Mã Phiếu,Thiết bị,Mã thiết bị,Loại yêu cầu,Tiêu đề,Người yêu cầu,Khoa/Phòng,Ngày tạo,Trạng thái\n"]
+                      .concat(reportData?.supportRequestsList?.map(r => 
+                        `"${r.id}","${r.device_name || 'N/A'}","${r.asset_code || 'N/A'}","${r.request_type === 'repair' ? 'Sửa chữa' : r.request_type === 'upgrade' ? 'Nâng cấp' : 'Mượn thiết bị'}","${r.title}","${r.requester_name || 'N/A'}","${r.department || 'N/A'}","${new Date(r.created_at).toLocaleDateString('vi-VN')}","${r.status}"`
+                      ).join("\n") || "")
+                  );
+                  const downloadAnchor = document.createElement('a');
+                  downloadAnchor.setAttribute("href", dataStr);
+                  downloadAnchor.setAttribute("download", "bao_cao_phieu_yeu_cau_ho_tro.csv");
+                  document.body.appendChild(downloadAnchor);
+                  downloadAnchor.click();
+                  downloadAnchor.remove();
+                }}>
+                  📥 Xuất báo cáo CSV
+                </button>
+                <button className="btn btn-primary" onClick={() => {
+                  const content = `
+                    <div style="font-family: Arial, sans-serif; padding: 20px;">
+                      <h2 style="text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px;">BÁO CÁO THỐNG KÊ PHIẾU YÊU CẦU DỊCH VỤ CNTT TỰ PHỤC VỤ</h2>
+                      <div style="margin-bottom: 20px; display: flex; justify-content: space-between;">
+                        <span>Tổng số phiếu: <strong>${reportData?.supportStats?.total_requests || 0}</strong></span>
+                        <span>Đã xong: <strong>${reportData?.supportStats?.completed_count || 0}</strong></span>
+                        <span>Đang xử lý/duyệt: <strong>${(parseInt(reportData?.supportStats?.approved_count || 0) + parseInt(reportData?.supportStats?.processing_count || 0) + parseInt(reportData?.supportStats?.submitted_count || 0))}</strong></span>
+                      </div>
+                      <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                        <thead>
+                          <tr style="background-color: #f2f2f2;">
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Mã thiết bị</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Loại yêu cầu</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Tiêu đề</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Khoa/Phòng</th>
+                            <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Trạng thái</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          ${reportData?.supportRequestsList?.map(r => `
+                            <tr>
+                              <td style="border: 1px solid #ddd; padding: 8px;">${r.asset_code || 'N/A'}</td>
+                              <td style="border: 1px solid #ddd; padding: 8px;">${r.request_type === 'repair' ? 'Sửa chữa' : r.request_type === 'upgrade' ? 'Nâng cấp' : 'Mượn thiết bị'}</td>
+                              <td style="border: 1px solid #ddd; padding: 8px;">${r.title}</td>
+                              <td style="border: 1px solid #ddd; padding: 8px;">${r.department || 'N/A'}</td>
+                              <td style="border: 1px solid #ddd; padding: 8px;">${r.status}</td>
+                            </tr>
+                          `).join('')}
+                        </tbody>
+                      </table>
+                    </div>
+                  `;
+                  handlePrint('BÁO CÁO THỐNG KÊ PHIẾU YÊU CẦU DỊCH VỤ CNTT TỰ PHỤC VỤ', content);
+                }}>
+                  🖨️ In báo cáo
+                </button>
+              </div>
+            </div>
+
+            {/* Support Requests Stats Cards */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' }}>
+              <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Tổng số phiếu yêu cầu</span>
+                <span style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--accent-secondary)' }}>
+                  {reportData?.supportStats?.total_requests || 0}
+                </span>
+              </div>
+              <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Mới gửi (Chờ duyệt)</span>
+                <span style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--status-instock)' }}>
+                  {reportData?.supportStats?.submitted_count || 0}
+                </span>
+              </div>
+              <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Đang xử lý kỹ thuật</span>
+                <span style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--status-maintenance)' }}>
+                  {parseInt(reportData?.supportStats?.approved_count || 0) + parseInt(reportData?.supportStats?.processing_count || 0)}
+                </span>
+              </div>
+              <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Đã hoàn tất hỗ trợ</span>
+                <span style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--status-active)' }}>
+                  {reportData?.supportStats?.completed_count || 0}
+                </span>
+              </div>
+              <div className="glass-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-secondary)' }}>Bị từ chối</span>
+                <span style={{ fontSize: '1.8rem', fontWeight: 800, color: 'var(--status-broken)' }}>
+                  {reportData?.supportStats?.rejected_count || 0}
+                </span>
+              </div>
+            </div>
+
+            {/* Support Request Charts & Breakdown Grid */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px' }}>
+              
+              {/* Type breakdown chart */}
+              <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: 700 }}>Cơ cấu yêu cầu hỗ trợ theo phân loại</h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '10px' }}>
+                  {(!reportData?.supportTypeBreakdown || reportData.supportTypeBreakdown.length === 0) ? (
+                    <div style={{ color: 'var(--text-secondary)', textAlign: 'center', padding: '20px' }}>Chưa có dữ liệu phân loại.</div>
+                  ) : (
+                    reportData.supportTypeBreakdown.map((t, i) => {
+                      const total = reportData.supportStats?.total_requests || 1;
+                      const percentage = ((t.count / total) * 100).toFixed(1);
+                      const typeLabel = t.request_type === 'repair' ? 'Sửa chữa' : t.request_type === 'upgrade' ? 'Nâng cấp' : 'Mượn thiết bị';
+                      const color = t.request_type === 'repair' ? 'var(--status-broken)' : t.request_type === 'upgrade' ? 'var(--accent-secondary)' : 'var(--accent-primary)';
+                      return (
+                        <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', fontWeight: 600 }}>
+                            <span>{typeLabel} ({t.count} phiếu)</span>
+                            <span>{percentage}%</span>
+                          </div>
+                          <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
+                            <div style={{ width: `${percentage}%`, height: '100%', background: color, borderRadius: '4px' }}></div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* Resolution rate chart */}
+              <div className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px', alignItems: 'center', justifyContent: 'center' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: 700, width: '100%', textAlign: 'left' }}>Tỷ lệ giải quyết yêu cầu hỗ trợ</h4>
+                {(() => {
+                  const total = parseInt(reportData?.supportStats?.total_requests || 0);
+                  const completed = parseInt(reportData?.supportStats?.completed_count || 0);
+                  const rate = total > 0 ? ((completed / total) * 100).toFixed(1) : "100.0";
+                  return (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', width: '100%', justifyContent: 'space-around', marginTop: '10px' }}>
+                      <div style={{ position: 'relative', width: '120px', height: '120px' }}>
+                        <svg width="120" height="120" viewBox="0 0 100 100">
+                          <circle cx="50" cy="50" r="40" fill="transparent" stroke="rgba(255,255,255,0.03)" strokeWidth="8" />
+                          <circle cx="50" cy="50" r="40" fill="transparent" 
+                            stroke="var(--status-active)" 
+                            strokeWidth="8" 
+                            strokeDasharray="251.2"
+                            strokeDashoffset={251.2 - (251.2 * parseFloat(rate)) / 100}
+                            transform="rotate(-90 50 50)"
+                            strokeLinecap="round"
+                          />
+                        </svg>
+                        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '1.2rem', fontWeight: 800, color: 'white' }}>
+                          {rate}%
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem' }}>
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--status-active)' }}></div>
+                          <span>Đã xong: {completed} phiếu</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.8rem' }}>
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--status-maintenance)' }}></div>
+                          <span>Đang xử lý: {total - completed} phiếu</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+            </div>
+
+            {/* Support Requests Detailed Table */}
+            <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <h4 style={{ fontSize: '1rem', fontWeight: 700 }}>Danh sách chi tiết phiếu yêu cầu hỗ trợ</h4>
+              <div className="table-container">
+                <table className="custom-table" style={{ fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr>
+                      <th>Mã TB</th>
+                      <th>Thiết bị</th>
+                      <th>Khoa/Phòng</th>
+                      <th>Loại</th>
+                      <th>Nội dung yêu cầu</th>
+                      <th>Người gửi</th>
+                      <th>Kỹ thuật hỗ trợ</th>
+                      <th>Ngày gửi</th>
+                      <th>Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(!reportData?.supportRequestsList || reportData.supportRequestsList.length === 0) ? (
+                      <tr>
+                        <td colSpan="9" style={{ textAlign: 'center', color: 'var(--text-secondary)', padding: '30px' }}>
+                          Không có phiếu yêu cầu nào.
+                        </td>
+                      </tr>
+                    ) : (
+                      reportData.supportRequestsList.map((r, i) => {
+                        const getStatusClass = (st) => {
+                          switch (st) {
+                            case 'submitted': return 'in_stock';
+                            case 'approved': return 'active';
+                            case 'processing': return 'maintenance';
+                            case 'completed': return 'active';
+                            case 'rejected': return 'broken';
+                            default: return 'in_stock';
+                          }
+                        };
+                        const getStatusText = (st) => {
+                          switch (st) {
+                            case 'submitted': return 'Mới gửi';
+                            case 'approved': return 'Đã duyệt';
+                            case 'processing': return 'Đang xử lý';
+                            case 'completed': return 'Đã xong';
+                            case 'rejected': return 'Từ chối';
+                            default: return st;
+                          }
+                        };
+                        return (
+                          <tr key={i}>
+                            <td style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>{r.asset_code || 'N/A'}</td>
+                            <td>{r.device_name || 'N/A'}</td>
+                            <td>{r.department || 'N/A'}</td>
+                            <td>
+                              <span style={{ fontWeight: 600 }}>
+                                {r.request_type === 'repair' && 'Sửa chữa'}
+                                {r.request_type === 'upgrade' && 'Nâng cấp'}
+                                {r.request_type === 'borrow' && 'Mượn máy'}
+                              </span>
+                            </td>
+                            <td>
+                              <strong>{r.title}</strong>
+                              {r.description && <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>{r.description}</div>}
+                            </td>
+                            <td>{r.requester_name || 'Khách'}</td>
+                            <td>{r.assignee_name || 'Chưa phân công'}</td>
+                            <td>{new Date(r.created_at).toLocaleDateString('vi-VN')}</td>
+                            <td>
+                              <span className={`status-badge ${getStatusClass(r.status)}`}>
+                                {getStatusText(r.status)}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
           </div>

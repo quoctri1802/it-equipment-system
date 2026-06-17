@@ -200,6 +200,16 @@ export async function initDatabase() {
     );
   `);
 
+  // 12. Create departments table
+  await query(`
+    CREATE TABLE IF NOT EXISTS departments (
+      id SERIAL PRIMARY KEY,
+      name VARCHAR(100) NOT NULL UNIQUE,
+      description TEXT,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
   // Migrate/Update maintenance_plans table to add columns for CMMS features if not exists
   await query(`
     ALTER TABLE maintenance_plans 
@@ -211,6 +221,20 @@ export async function initDatabase() {
   `);
 
   // Seed default data if empty
+  const deptsCount = await query('SELECT count(*) FROM departments');
+  if (parseInt(deptsCount.rows[0].count) === 0) {
+    await query(`
+      INSERT INTO departments (name, description) VALUES
+      ('Kho thiết bị', 'Kho lưu trữ thiết bị chính của bệnh viện'),
+      ('Phòng CNTT', 'Tổ Công nghệ thông tin - Quản trị hệ thống'),
+      ('Khoa Cấp Cứu', 'Bộ phận cấp cứu và điều trị khẩn cấp'),
+      ('Khoa Khám Bệnh', 'Phòng khám đa khoa và tiếp đón bệnh nhân'),
+      ('Khoa Dược', 'Khoa quản lý và cấp phát dược phẩm, thuốc'),
+      ('Phòng Kế Hoạch', 'Phòng Kế hoạch tổng hợp bệnh viện'),
+      ('Phòng Hành Chính', 'Phòng Hành chính quản trị và nhân sự');
+    `);
+  }
+
   const categoriesCount = await query('SELECT count(*) FROM categories');
   if (parseInt(categoriesCount.rows[0].count) === 0) {
     await query(`

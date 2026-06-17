@@ -15,6 +15,7 @@ import UserManagement from '@/components/UserManagement';
 import SelfServicePortal from '@/components/SelfServicePortal';
 import Reports from '@/components/Reports';
 import Logo from '@/components/Logo';
+import Departments from '@/components/Departments';
 
 export default function Home() {
   const [user, setUser] = useState(null);
@@ -139,6 +140,7 @@ export default function Home() {
           {activeTab === 'inventory' && <Inventory user={user} />}
           {activeTab === 'personnel' && <Personnel user={user} />}
           {activeTab === 'users' && <UserManagement user={user} />}
+          {activeTab === 'departments' && <Departments user={user} />}
           {activeTab === 'audit' && <AuditLogs />}
         </main>
 

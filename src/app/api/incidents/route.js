@@ -5,6 +5,7 @@ export async function GET(request) {
     const url = new URL(request.url);
     const status = url.searchParams.get('status') || '';
     const deviceId = url.searchParams.get('device_id') || '';
+    const department = url.searchParams.get('department') || '';
 
     let sql = `
       SELECT i.*, d.name as device_name, d.asset_code, d.serial_number,
@@ -27,6 +28,12 @@ export async function GET(request) {
     if (deviceId) {
       sql += ` AND i.device_id = $${paramIndex}`;
       params.push(parseInt(deviceId));
+      paramIndex++;
+    }
+
+    if (department) {
+      sql += ` AND d.location = $${paramIndex}`;
+      params.push(department);
       paramIndex++;
     }
 

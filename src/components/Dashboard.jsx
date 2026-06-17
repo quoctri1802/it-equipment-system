@@ -10,7 +10,11 @@ export default function Dashboard({ user }) {
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
-      const res = await fetch('/api/dashboard');
+      const isGlobalManager = ['admin', 'director', 'accountant', 'itstaff'].includes(user?.role);
+      const url = isGlobalManager 
+        ? '/api/dashboard' 
+        : `/api/dashboard?department=${encodeURIComponent(user?.department || '')}`;
+      const res = await fetch(url);
       const json = await res.json();
       if (json.success) {
         setData(json);
@@ -140,6 +144,14 @@ export default function Dashboard({ user }) {
             <span className="metric-value glow-orange" style={{ color: 'var(--status-maintenance)' }}>{maintenanceCount}</span>
           </div>
           <div className="metric-icon" style={{ color: 'var(--status-maintenance)' }}>🔧</div>
+        </div>
+
+        <div className="glass-card metric-card border-glow-purple">
+          <div className="metric-info">
+            <span className="metric-label">Yêu cầu hỗ trợ chờ xử lý</span>
+            <span className="metric-value glow-purple" style={{ color: '#d946ef' }}>{stats.supportActiveCount || 0}</span>
+          </div>
+          <div className="metric-icon" style={{ color: '#d946ef', fontSize: '1.4rem' }}>📱</div>
         </div>
       </div>
 
@@ -275,6 +287,77 @@ export default function Dashboard({ user }) {
                         </td>
                       </tr>
                     ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+
+          {/* Recent Support Requests */}
+          <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700 }}>Yêu cầu hỗ trợ tự phục vụ gần đây</h3>
+              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={fetchDashboardData}>Làm mới</button>
+            </div>
+
+            {!data?.recentRequests || data.recentRequests.length === 0 ? (
+              <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                Không có yêu cầu hỗ trợ nào gần đây.
+              </div>
+            ) : (
+              <div className="table-container">
+                <table className="custom-table">
+                  <thead>
+                    <tr>
+                      <th>Mã TB</th>
+                      <th>Loại</th>
+                      <th>Tiêu đề yêu cầu</th>
+                      <th>Người gửi</th>
+                      <th>Trạng thái</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.recentRequests.map(req => {
+                      const getStatusClass = (st) => {
+                        switch (st) {
+                          case 'submitted': return 'in_stock';
+                          case 'approved': return 'active';
+                          case 'processing': return 'maintenance';
+                          case 'completed': return 'active';
+                          case 'rejected': return 'broken';
+                          default: return 'in_stock';
+                        }
+                      };
+                      const getStatusText = (st) => {
+                        switch (st) {
+                          case 'submitted': return 'Mới gửi';
+                          case 'approved': return 'Đã duyệt';
+                          case 'processing': return 'Đang xử lý';
+                          case 'completed': return 'Đã xong';
+                          case 'rejected': return 'Từ chối';
+                          default: return st;
+                        }
+                      };
+                      return (
+                        <tr key={req.id}>
+                          <td style={{ fontWeight: 600, color: 'var(--accent-primary)' }}>{req.asset_code || 'N/A'}</td>
+                          <td>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>
+                              {req.request_type === 'repair' && 'Sửa chữa'}
+                              {req.request_type === 'upgrade' && 'Nâng cấp'}
+                              {req.request_type === 'borrow' && 'Mượn thiết bị'}
+                            </span>
+                          </td>
+                          <td>{req.title}</td>
+                          <td>{req.requester_name || 'Khách'}</td>
+                          <td>
+                            <span className={`status-badge ${getStatusClass(req.status)}`}>
+                              {getStatusText(req.status)}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>

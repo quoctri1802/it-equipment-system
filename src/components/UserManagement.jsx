@@ -23,6 +23,8 @@ export default function UserManagement({ user }) {
   const [editRole, setEditRole] = useState('');
   const [editDept, setEditDept] = useState('');
 
+  const [departments, setDepartments] = useState([]);
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -38,8 +40,21 @@ export default function UserManagement({ user }) {
     }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      const res = await fetch('/api/departments');
+      const json = await res.json();
+      if (json.success) {
+        setDepartments(json.departments);
+      }
+    } catch (e) {
+      console.error('Lỗi tải danh mục khoa phòng:', e);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchDepartments();
   }, []);
 
   const handleCreateUser = async (e) => {
@@ -256,7 +271,12 @@ export default function UserManagement({ user }) {
 
               <div className="form-group">
                 <label className="form-label">Khoa / Phòng làm việc</label>
-                <input type="text" className="form-control" placeholder="Phòng CNTT / Khoa Cấp Cứu" value={formDept} onChange={e => setFormDept(e.target.value)} />
+                <select className="form-control" value={formDept} onChange={e => setFormDept(e.target.value)}>
+                  <option value="">-- Chọn khoa/phòng --</option>
+                  {departments.map(d => (
+                    <option key={d.id} value={d.name}>{d.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
@@ -302,7 +322,12 @@ export default function UserManagement({ user }) {
 
               <div className="form-group">
                 <label className="form-label">Khoa / Phòng làm việc</label>
-                <input type="text" className="form-control" value={editDept} onChange={e => setEditDept(e.target.value)} />
+                <select className="form-control" value={editDept} onChange={e => setEditDept(e.target.value)}>
+                  <option value="">-- Chọn khoa/phòng --</option>
+                  {departments.map(d => (
+                    <option key={d.id} value={d.name}>{d.name}</option>
+                  ))}
+                </select>
               </div>
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>

@@ -4,6 +4,7 @@ export default function Personnel({ user }) {
   const [staff, setStaff] = useState([]);
   const [assignments, setAssignments] = useState([]);
   const [devices, setDevices] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Modals visibility
@@ -46,6 +47,13 @@ export default function Personnel({ user }) {
       const devJson = await devRes.json();
       if (devJson.success) {
         setDevices(devJson.devices);
+      }
+
+      // Fetch departments
+      const deptRes = await fetch('/api/departments');
+      const deptJson = await deptRes.json();
+      if (deptJson.success) {
+        setDepartments(deptJson.departments);
       }
     } catch (err) {
       console.error('Lỗi tải thông tin nhân sự/phân công:', err);
@@ -475,12 +483,16 @@ export default function Personnel({ user }) {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Khoa / Phòng ban</label>
-                  <input 
-                    type="text" 
+                  <select 
                     className="form-control" 
                     value={staffDept} 
                     onChange={e => setStaffDept(e.target.value)} 
-                  />
+                  >
+                    <option value="">-- Chọn khoa/phòng --</option>
+                    {departments.map(d => (
+                      <option key={d.id} value={d.name}>{d.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

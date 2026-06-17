@@ -4,6 +4,7 @@ import QRCode from 'qrcode';
 export default function DeviceCatalog({ user }) {
   const [devices, setDevices] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [departments, setDepartments] = useState([]);
   const [search, setSearch] = useState('');
   const [selectedCat, setSelectedCat] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -40,6 +41,11 @@ export default function DeviceCatalog({ user }) {
       if (search) queryParams.append('search', search);
       if (selectedCat) queryParams.append('category', selectedCat);
       if (selectedStatus) queryParams.append('status', selectedStatus);
+      
+      // Phân quyền hiển thị theo khoa phòng của người dùng
+      if (!['admin', 'director', 'accountant', 'itstaff'].includes(user?.role)) {
+        queryParams.append('location', user?.department || '');
+      }
 
       const res = await fetch(`/api/devices?${queryParams.toString()}`);
       const json = await res.json();
@@ -56,8 +62,21 @@ export default function DeviceCatalog({ user }) {
     }
   };
 
+  const fetchDepartments = async () => {
+    try {
+      const res = await fetch('/api/departments');
+      const json = await res.json();
+      if (json.success) {
+        setDepartments(json.departments);
+      }
+    } catch (e) {
+      console.error('Lỗi tải danh mục khoa phòng:', e);
+    }
+  };
+
   useEffect(() => {
     fetchDevices();
+    fetchDepartments();
   }, [search, selectedCat, selectedStatus]);
 
   // Handle viewing allocation history when selecting a device
@@ -584,7 +603,16 @@ export default function DeviceCatalog({ user }) {
                 </div>
                 <div className="form-group">
                   <label className="form-label">Nơi bàn giao ban đầu</label>
-                  <input type="text" className="form-control" placeholder="Khoa Khám Bệnh" value={formLocation} onChange={e => setFormLocation(e.target.value)} />
+                  <select 
+                    className="form-control" 
+                    value={formLocation} 
+                    onChange={e => setFormLocation(e.target.value)} 
+                  >
+                    <option value="">-- Chọn khoa/phòng --</option>
+                    {departments.map(d => (
+                      <option key={d.id} value={d.name}>{d.name}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -688,7 +716,16 @@ export default function DeviceCatalog({ user }) {
                       </div>
                       <div className="form-group">
                         <label className="form-label">Khoa / Vị trí hiện tại</label>
-                        <input type="text" className="form-control" value={formLocation} onChange={e => setFormLocation(e.target.value)} />
+                        <select 
+                          className="form-control" 
+                          value={formLocation} 
+                          onChange={e => setFormLocation(e.target.value)} 
+                        >
+                          <option value="">-- Chọn khoa/phòng --</option>
+                          {departments.map(d => (
+                            <option key={d.id} value={d.name}>{d.name}</option>
+                          ))}
+                        </select>
                       </div>
                       <div className="form-group">
                         <label className="form-label">Bảo hành (Tháng)</label>
