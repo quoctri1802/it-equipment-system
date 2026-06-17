@@ -162,3 +162,50 @@ export async function POST(request) {
     });
   }
 }
+
+export async function DELETE(request) {
+  try {
+    const url = new URL(request.url);
+    const id = url.searchParams.get('id');
+    const user_id = url.searchParams.get('user_id');
+    const username = url.searchParams.get('username');
+
+    if (!id) {
+      return new Response(JSON.stringify({ success: false, message: 'Thiếu ID linh kiện cần xóa' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Get item name first for logging
+    const checkItem = await query('SELECT name FROM consumables WHERE id = $1', [parseInt(id)]);
+    if (checkItem.rows.length === 0) {
+      return new Response(JSON.stringify({ success: false, message: 'Không tìm thấy linh kiện cần xóa' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    const itemName = checkItem.rows[0].name;
+
+    // Delete item (consumable_logs will be deleted automatically due to ON DELETE CASCADE)
+    await query('DELETE FROM consumables WHERE id = $1', [parseInt(id)]);
+
+    // Audit log
+    await query(`
+      INSERT INTO audit_logs (user_id, username, action, details)
+      VALUES ($1, $2, $3, $4)
+    `, [user_id ? parseInt(user_id) : null, username || 'Hệ thống', 'Xóa linh kiện', `Xóa linh kiện/vật tư "${itemName}" khỏi hệ thống`]);
+
+    return new Response(JSON.stringify({ success: true }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error('Lỗi khi xóa linh kiện:', error);
+    return new Response(JSON.stringify({ success: false, message: error.message, error: error.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+

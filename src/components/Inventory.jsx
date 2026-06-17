@@ -163,6 +163,31 @@ export default function Inventory({ user }) {
     }
   };
 
+  const handleDeleteConsumable = async (targetId) => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa loại linh kiện này? Mọi lịch sử xuất nhập liên quan sẽ bị xóa!')) return;
+    try {
+      const res = await fetch(`/api/inventory?id=${targetId}&user_id=${user?.id}&username=${encodeURIComponent(user?.username || '')}`, {
+        method: 'DELETE'
+      });
+
+      let json;
+      try {
+        json = await res.json();
+      } catch (err) {
+        throw new Error(`Phản hồi máy chủ không hợp lệ (HTTP ${res.status})`);
+      }
+
+      if (res.ok && json.success) {
+        alert('Xóa linh kiện thành công!');
+        loadData();
+      } else {
+        alert('Lỗi: ' + (json.message || json.error || 'Yêu cầu thất bại'));
+      }
+    } catch (e) {
+      alert(e.message);
+    }
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -220,28 +245,51 @@ export default function Inventory({ user }) {
                     </div>
 
                     {['admin', 'itstaff'].includes(user?.role) && (
-                      <div style={{ display: 'flex', gap: '8px', marginTop: '14px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '14px' }}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          <button 
+                            className="btn btn-secondary" 
+                            style={{ flex: 1, padding: '6px 6px', fontSize: '0.75rem' }}
+                            onClick={() => {
+                              setImportItem(item);
+                              setImportPrice(item.price);
+                            }}
+                          >
+                            📥 Nhập kho
+                          </button>
+                          <button 
+                            className="btn btn-secondary" 
+                            style={{ flex: 1, padding: '6px 6px', fontSize: '0.75rem', borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' }}
+                            onClick={() => {
+                              setExportItem(item);
+                              setExportQty('1');
+                              setExportDept('');
+                              setExportNotes('');
+                            }}
+                          >
+                            📤 Xuất khoa
+                          </button>
+                        </div>
                         <button 
-                          className="btn btn-secondary" 
-                          style={{ flex: 1, padding: '6px 6px', fontSize: '0.75rem' }}
-                          onClick={() => {
-                            setImportItem(item);
-                            setImportPrice(item.price);
+                          className="btn btn-danger" 
+                          style={{ 
+                            width: '100%', 
+                            padding: '6px 6px', 
+                            fontSize: '0.75rem', 
+                            background: 'rgba(239, 68, 68, 0.15)', 
+                            color: '#f43f5e', 
+                            border: '1px solid rgba(239, 68, 68, 0.3)',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '4px',
+                            transition: 'all 0.2s'
                           }}
+                          onClick={() => handleDeleteConsumable(item.id)}
                         >
-                          📥 Nhập kho
-                        </button>
-                        <button 
-                          className="btn btn-secondary" 
-                          style={{ flex: 1, padding: '6px 6px', fontSize: '0.75rem', borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' }}
-                          onClick={() => {
-                            setExportItem(item);
-                            setExportQty('1');
-                            setExportDept('');
-                            setExportNotes('');
-                          }}
-                        >
-                          📤 Xuất khoa
+                          🗑️ Xóa linh kiện
                         </button>
                       </div>
                     )}
