@@ -1,7 +1,7 @@
 import React from 'react';
 import Logo from './Logo';
 
-export default function Sidebar({ activeTab, setActiveTab, user }) {
+export default function Sidebar({ activeTab, setActiveTab, user, sidebarOpen, setSidebarOpen }) {
   const menuItems = [
     { id: 'dashboard', label: 'Bảng điều khiển', icon: '📊', roles: ['admin', 'director', 'accountant', 'itstaff', 'depthead'] },
     { id: 'reports', label: 'Báo cáo & Thống kê', icon: '📈', roles: ['admin', 'director', 'accountant', 'itstaff'] },
@@ -21,7 +21,26 @@ export default function Sidebar({ activeTab, setActiveTab, user }) {
   );
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar ${sidebarOpen ? 'mobile-open' : ''}`}>
+      <button 
+        className="mobile-sidebar-close" 
+        onClick={() => setSidebarOpen(false)}
+        style={{
+          display: 'none',
+          position: 'absolute',
+          top: '20px',
+          right: '20px',
+          background: 'none',
+          border: 'none',
+          color: 'white',
+          fontSize: '1.4rem',
+          cursor: 'pointer',
+          zIndex: 110
+        }}
+        title="Đóng menu"
+      >
+        ✖
+      </button>
       <div className="sidebar-logo-container" style={{ gap: '10px', paddingBottom: '20px', marginBottom: '20px' }}>
         <Logo width={40} height={40} showGlow={false} />
         <div style={{ flex: 1, minWidth: 0 }}>

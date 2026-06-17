@@ -1,10 +1,27 @@
 import React from 'react';
 import Logo from './Logo';
 
-export default function Header({ user, onLogout, theme, onToggleTheme }) {
+export default function Header({ user, onLogout, theme, onToggleTheme, onToggleSidebar }) {
   return (
     <header className="header">
       <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+        <button 
+          className="mobile-menu-toggle" 
+          onClick={onToggleSidebar}
+          style={{
+            display: 'none',
+            background: 'none',
+            border: 'none',
+            color: 'white',
+            fontSize: '1.6rem',
+            cursor: 'pointer',
+            padding: '4px',
+            marginRight: '8px'
+          }}
+          title="Mở menu"
+        >
+          ☰
+        </button>
         <Logo width={46} height={46} />
 
         <div>

@@ -23,6 +23,7 @@ export default function Home() {
   const [initializingDb, setInitializingDb] = useState(true);
   const [scanQueryParam, setScanQueryParam] = useState('');
   const [theme, setTheme] = useState('light');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Load theme from localStorage on initial render
   useEffect(() => {
@@ -111,11 +112,11 @@ export default function Home() {
   return (
     <div className="app-container">
       {/* Sidebar navigation */}
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} user={user} />
+      <Sidebar activeTab={activeTab} setActiveTab={(tab) => { setActiveTab(tab); setSidebarOpen(false); }} user={user} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
       {/* Main content pane */}
       <div className="main-content">
-        <Header user={user} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} />
+        <Header user={user} onLogout={handleLogout} theme={theme} onToggleTheme={toggleTheme} onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
 
         <main className="page-container">
           {activeTab === 'dashboard' && <Dashboard user={user} />}

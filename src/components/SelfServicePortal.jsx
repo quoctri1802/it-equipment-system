@@ -414,10 +414,10 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+  <div className="self-service-portal-wrapper">
       
       {/* Dashboard header for Self Service Portal */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="portal-header">
         <div>
           <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Cổng tự phục vụ & Trợ lý di động</h2>
           <p style={{ color: 'var(--text-secondary)' }}>
@@ -427,10 +427,10 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
       </div>
 
       {/* Main Grid: Desktop displays side-by-side dashboard and simulated phone shell */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 0.9fr', gap: '30px', alignItems: 'start' }}>
+      <div className="self-service-grid">
         
         {/* LEFT COLUMN: DESKTOP CONTROL PANEL / WEB VIEW */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="glass-card self-service-desktop-col">
           <div>
             <h3 style={{ fontSize: '1.1rem', fontWeight: 700, borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', marginBottom: '15px' }}>
               Danh sách Phiếu hỗ trợ ({userDept})
@@ -440,7 +440,7 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
             </p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '420px', overflowY: 'auto', paddingRight: '5px' }}>
+          <div className="request-list-container">
             {requests.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '30px', color: 'var(--text-secondary)', fontStyle: 'italic', fontSize: '0.9rem' }}>
                 Không có phiếu yêu cầu nào được tìm thấy.
@@ -475,27 +475,27 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
 
           {/* IT STAFF ONLY: QUICK LINK TO VIEW ASSIGNED TICKETS */}
           {isITUser && (
-            <div style={{ background: 'rgba(124, 58, 237, 0.08)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(124, 58, 237, 0.2)', fontSize: '0.85rem' }}>
+            <div className="it-admin-banner">
               🔑 <strong>Quyền hạn CNTT:</strong> Bạn có quyền phê duyệt, thay đổi tiến độ timeline và phân công người phụ trách kỹ thuật cho các yêu cầu trên. Hãy nhấp vào bất kỳ thẻ yêu cầu nào để cập nhật.
             </div>
           )}
         </div>
 
         {/* RIGHT COLUMN: SIMULATED SMARTPHONE SHELL */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div className="self-service-mobile-wrapper">
           
           {/* Smartphone mockup layout */}
-          <div className="mobile-portal-shell" style={{ border: '8px solid #334155', boxShadow: '0 25px 50px -12px rgb(0 0 0 / 0.7)' }}>
+          <div className="mobile-portal-shell">
             
             {/* Mock phone status bar */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.65rem', color: 'var(--text-secondary)', borderBottom: '1px solid rgba(255,255,255,0.04)', paddingBottom: '4px', marginBottom: '8px', fontWeight: 600 }}>
+            <div className="mock-phone-status-bar">
               <span>📡 Viettel 5G</span>
               <span>16:20</span>
               <span>🔋 98%</span>
             </div>
 
             {/* Mock phone app header */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '12px', border: '1px solid var(--border-color)' }}>
+            <div className="mobile-app-header">
               <span style={{ fontSize: '1.3rem' }}>📱</span>
               <div style={{ flex: 1 }}>
                 <div style={{ fontWeight: 800, fontSize: '0.75rem', color: 'white', lineHeight: '1.2' }}>PORTAL DI ĐỘNG TTYT</div>
@@ -507,11 +507,11 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
             </div>
 
             {/* ACTIVE TAB CONTENTS */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px', overflowY: 'auto', minHeight: '340px' }}>
+            <div className="mobile-tab-content">
               
               {/* TAB 1: SCANNER */}
               {activeMobileTab === 'scan' && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="mobile-tab-scroll-container">
                   
                   {/* Mode select bar */}
                   <div style={{ display: 'flex', gap: '6px', background: 'var(--bg-tertiary)', padding: '3px', borderRadius: '8px', fontSize: '0.7rem' }}>
@@ -539,16 +539,24 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
                       <video ref={videoRef} autoPlay playsInline muted className="scanner-camera-feed" />
                     ) : (
                       // Simulation background grid
-                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0e111d', flexDirection: 'column', gap: '10px' }}>
-                        <span style={{ fontSize: '2.5rem', animation: 'pulsateGently 2s infinite' }}>📷</span>
-                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.7rem', textAlign: 'center', padding: '0 20px' }}>
-                          Mô phỏng máy ảnh điện thoại của nhân viên
+                      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0e111d', gap: '10px' }}>
+                        <span style={{ fontSize: '2.5rem', animation: 'pulsateGently 2s infinite' }}>📸</span>
+                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.72rem', textAlign: 'center', padding: '0 20px', fontWeight: 600 }}>
+                          Chế độ mô phỏng quét mã QR thiết bị
+                        </div>
+                        <div style={{ color: 'var(--text-muted)', fontSize: '0.62rem', textAlign: 'center', padding: '0 20px' }}>
+                          Chọn một máy khám bên dưới để bắt đầu quét
                         </div>
                       </div>
                     )}
 
                     <div className="scanner-overlay-guide">
-                      <div className="scanner-box" />
+                      <div className="scanner-box">
+                        <div className="scanner-corner top-left" />
+                        <div className="scanner-corner top-right" />
+                        <div className="scanner-corner bottom-left" />
+                        <div className="scanner-corner bottom-right" />
+                      </div>
                     </div>
                   </div>
 
@@ -589,47 +597,106 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
 
                   {/* Display details of Scanned Device */}
                   {scannedDevice && (
-                    <div className="glass-card" style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', display: 'flex', flexDirection: 'column', gap: '10px', animation: 'slideIn 0.3s ease-out' }}>
-                      <div style={{ display: 'flex', justifyValues: 'space-between', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: '6px' }}>
-                        <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--accent-primary)' }}>{scannedDevice.asset_code}</span>
-                        <span className={`status-badge ${scannedDevice.status}`} style={{ fontSize: '0.55rem', padding: '1px 5px' }}>
-                          {scannedDevice.status === 'active' ? 'Đang hoạt động' : scannedDevice.status === 'broken' ? 'Hỏng hóc' : 'Trong kho'}
-                        </span>
+                    <div className="glass-card scanned-device-card" style={{ padding: '16px', background: 'rgba(255, 255, 255, 0.03)', display: 'flex', flexDirection: 'column', gap: '14px', animation: 'slideIn 0.3s ease-out', borderRadius: '16px', border: '1px solid rgba(6, 182, 212, 0.25)', boxShadow: '0 8px 32px 0 rgba(6, 182, 212, 0.1)' }}>
+                      
+                      {/* Card Header with Icon */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(6, 182, 212, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '1px solid rgba(6, 182, 212, 0.2)' }}>
+                          {scannedDevice.category_name?.includes('in') || scannedDevice.name?.toLowerCase().includes('in') ? '🖨️' : 
+                           scannedDevice.category_name?.includes('mạng') || scannedDevice.category_name?.includes('Network') ? '📡' : 
+                           scannedDevice.category_name?.includes('chủ') || scannedDevice.category_name?.includes('Server') ? '🎛️' : '💻'}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{scannedDevice.name}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                            <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--accent-secondary)' }}>{scannedDevice.asset_code}</span>
+                            <span style={{ color: 'rgba(255,255,255,0.15)' }}>•</span>
+                            <span style={{ fontSize: '0.65rem', color: 'var(--text-secondary)' }}>SN: {scannedDevice.serial_number || 'N/A'}</span>
+                          </div>
+                        </div>
                       </div>
 
-                      <div style={{ fontSize: '0.75rem', color: 'white', fontWeight: 600 }}>{scannedDevice.name}</div>
-                      <div style={{ fontSize: '0.68rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                        <div>Vị trí: <strong>{scannedDevice.location}</strong></div>
-                        <div>Hãng/Model: {scannedDevice.manufacturer} / {scannedDevice.model || 'N/A'}</div>
-                        <div>Serial: {scannedDevice.serial_number}</div>
+                      {/* Info grid */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Khoa / Phòng</span>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#f1f5f9' }}>{scannedDevice.location}</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                          <span style={{ fontSize: '0.62rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: 600 }}>Trạng thái</span>
+                          <span className={`status-badge ${scannedDevice.status}`} style={{ fontSize: '0.65rem', padding: '2px 6px', width: 'fit-content', fontWeight: 700 }}>
+                            {scannedDevice.status === 'active' && '🟢 Hoạt động'}
+                            {scannedDevice.status === 'broken' && '🔴 Báo hỏng'}
+                            {scannedDevice.status === 'maintenance' && '🔧 Đang sửa'}
+                            {scannedDevice.status === 'in_stock' && '🔵 Trong kho'}
+                            {!['active', 'broken', 'maintenance', 'in_stock'].includes(scannedDevice.status) && getStatusText(scannedDevice.status)}
+                          </span>
+                        </div>
                       </div>
+
+                      {/* Technical specifications sub-card */}
+                      {scannedDevice.specifications && Object.keys(scannedDevice.specifications).length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: 'rgba(0,0,0,0.1)', padding: '8px', borderRadius: '8px', fontSize: '0.68rem', color: 'var(--text-secondary)' }}>
+                          <div style={{ fontWeight: 700, color: 'var(--text-primary)', marginBottom: '2px', textTransform: 'uppercase', fontSize: '0.6rem', letterSpacing: '0.3px' }}>Cấu hình phần cứng:</div>
+                          {Object.entries(scannedDevice.specifications).map(([key, val]) => val && (
+                            <div key={key} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <span>{key}:</span>
+                              <strong style={{ color: 'white' }}>{val}</strong>
+                            </div>
+                          ))}
+                        </div>
+                      )}
 
                       {/* Scanned device actions */}
-                      <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '10px', marginTop: '4px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '12px', marginTop: '2px' }}>
                         
-                        {/* Report incident button (For all users) */}
-                        <button 
-                          className="btn btn-danger" 
-                          style={{ flex: 1, padding: '6px', fontSize: '0.65rem' }}
-                          onClick={() => {
-                            setFormRequestType('repair');
-                            setFormTitle(`Báo hỏng máy ${scannedDevice.asset_code}`);
-                            setFormDescription(`Báo hỏng tại hiện trường cho máy: ${scannedDevice.name}. Ghi nhận bởi nhân sự khoa/phòng.`);
-                            setActiveMobileTab('create');
-                          }}
-                        >
-                          ⚠️ Báo hỏng nhanh
-                        </button>
+                        {/* Quick action group */}
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                          {/* Report incident button (For all users) */}
+                          <button 
+                            type="button"
+                            className="btn btn-danger" 
+                            style={{ flex: 1, padding: '8px 4px', fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                            onClick={() => {
+                              setFormRequestType('repair');
+                              setFormTitle(`Báo hỏng thiết bị ${scannedDevice.asset_code}`);
+                              setFormDescription(`Báo hỏng khẩn cấp cho thiết bị: ${scannedDevice.name}.\n- Vị trí: ${scannedDevice.location}\n- Triệu chứng: [Vui lòng điền cụ thể...]`);
+                              setFormDeviceId(scannedDevice.id);
+                              setActiveMobileTab('create');
+                            }}
+                          >
+                            ⚠️ Báo hỏng máy
+                          </button>
+
+                          {/* Borrow button (For all users) */}
+                          <button 
+                            type="button"
+                            className="btn" 
+                            style={{ flex: 1, padding: '8px 4px', fontSize: '0.7rem', fontWeight: 700, background: 'linear-gradient(135deg, #ec4899 0%, #be185d 100%)', color: 'white', border: 'none', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', boxShadow: '0 4px 12px rgba(236,72,153,0.2)' }}
+                            onClick={() => {
+                              setFormRequestType('borrow');
+                              setFormTitle(`Đăng ký mượn máy ${scannedDevice.asset_code}`);
+                              setFormDescription(`Đăng ký mượn máy dự phòng phục vụ công tác tại khoa/phòng:\n- Thiết bị đăng ký: ${scannedDevice.name} (Mã: ${scannedDevice.asset_code})\n- Lý do: [Vui lòng điền mục đích sử dụng...]`);
+                              setFormDeviceId(scannedDevice.id);
+                              setActiveMobileTab('create');
+                            }}
+                          >
+                            📋 Đăng ký mượn
+                          </button>
+                        </div>
 
                         {/* IT Quick Inventory verify check button */}
                         {isITUser && (
-                          <button 
-                            className="btn btn-primary" 
-                            style={{ flex: 1, padding: '6px', fontSize: '0.65rem' }}
-                            onClick={handleInventoryCheck}
-                          >
-                            ✓ Ghi nhận kiểm kê
-                          </button>
+                          <div style={{ display: 'flex', gap: '8px', marginTop: '2px' }}>
+                            <button 
+                              type="button"
+                              className="btn btn-primary" 
+                              style={{ flex: 1, padding: '8px', fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', border: 'none' }}
+                              onClick={handleInventoryCheck}
+                            >
+                              ✓ Ghi nhận kiểm kê
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>
