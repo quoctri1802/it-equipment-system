@@ -51,6 +51,10 @@ export async function initDatabase() {
     );
   `);
 
+  await query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS permissions JSONB DEFAULT '[]'::jsonb;
+  `);
+
   // 3. Create devices table
   await query(`
     CREATE TABLE IF NOT EXISTS devices (

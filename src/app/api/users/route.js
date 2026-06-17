@@ -2,7 +2,7 @@ import { query } from '@/lib/db';
 
 export async function GET(request) {
   try {
-    const result = await query('SELECT id, username, role, name, department FROM users ORDER BY name ASC');
+    const result = await query('SELECT id, username, role, name, department, permissions FROM users ORDER BY name ASC');
     return new Response(JSON.stringify({ 
       success: true, 
       users: result.rows 
@@ -22,13 +22,13 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const data = await request.json();
-    const { username, password, role, name, department, actor_id, actor_name } = data;
+    const { username, password, role, name, department, permissions, actor_id, actor_name } = data;
 
     const result = await query(`
-      INSERT INTO users (username, password, role, name, department)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING id, username, role, name, department
-    `, [username, password, role, name, department]);
+      INSERT INTO users (username, password, role, name, department, permissions)
+      VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING id, username, role, name, department, permissions
+    `, [username, password, role, name, department, JSON.stringify(permissions || [])]);
 
     const newUser = result.rows[0];
 
@@ -54,25 +54,25 @@ export async function POST(request) {
 export async function PUT(request) {
   try {
     const data = await request.json();
-    const { id, username, password, role, name, department, actor_id, actor_name } = data;
+    const { id, username, password, role, name, department, permissions, actor_id, actor_name } = data;
 
     let result;
     if (password) {
       // If updating password
       result = await query(`
         UPDATE users SET
-          username = $1, password = $2, role = $3, name = $4, department = $5
-        WHERE id = $6
-        RETURNING id, username, role, name, department
-      `, [username, password, role, name, department, id]);
+          username = $1, password = $2, role = $3, name = $4, department = $5, permissions = $6
+        WHERE id = $7
+        RETURNING id, username, role, name, department, permissions
+      `, [username, password, role, name, department, JSON.stringify(permissions || []), id]);
     } else {
       // Without updating password
       result = await query(`
         UPDATE users SET
-          username = $1, role = $2, name = $3, department = $4
-        WHERE id = $5
-        RETURNING id, username, role, name, department
-      `, [username, role, name, department, id]);
+          username = $1, role = $2, name = $3, department = $4, permissions = $5
+        WHERE id = $6
+        RETURNING id, username, role, name, department, permissions
+      `, [username, role, name, department, JSON.stringify(permissions || []), id]);
     }
 
     if (result.rows.length === 0) {

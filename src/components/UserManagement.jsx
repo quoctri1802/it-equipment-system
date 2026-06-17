@@ -1,5 +1,19 @@
 import React, { useState, useEffect } from 'react';
 
+const AVAILABLE_PERMISSIONS = [
+  { id: 'dashboard', label: 'Bảng điều khiển', icon: '📊' },
+  { id: 'reports', label: 'Báo cáo & Thống kê', icon: '📈' },
+  { id: 'self_service', label: 'Cổng tự phục vụ & QR', icon: '📱' },
+  { id: 'devices', label: 'Danh mục thiết bị', icon: '💻' },
+  { id: 'lifecycle', label: 'Vòng đời thiết bị', icon: '🔄' },
+  { id: 'warranty', label: 'Bảo hành & Hợp đồng', icon: '🛡️' },
+  { id: 'inventory', label: 'Kho linh kiện & Vật tư', icon: '📦' },
+  { id: 'personnel', label: 'Nhân sự & Phân công', icon: '👨‍⚕️' },
+  { id: 'departments', label: 'Danh mục khoa, phòng', icon: '🏢' },
+  { id: 'users', label: 'Quản lý người dùng', icon: '👥' },
+  { id: 'audit', label: 'Nhật ký thao tác', icon: '📜' },
+];
+
 export default function UserManagement({ user }) {
   const [usersList, setUsersList] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +29,7 @@ export default function UserManagement({ user }) {
   const [formPassword, setFormPassword] = useState('');
   const [formRole, setFormRole] = useState('itstaff'); // admin, director, accountant, itstaff, depthead
   const [formDept, setFormDept] = useState('');
+  const [formPermissions, setFormPermissions] = useState([]);
 
   // Edit form
   const [editName, setEditName] = useState('');
@@ -22,6 +37,7 @@ export default function UserManagement({ user }) {
   const [editPassword, setEditPassword] = useState('');
   const [editRole, setEditRole] = useState('');
   const [editDept, setEditDept] = useState('');
+  const [editPermissions, setEditPermissions] = useState([]);
 
   const [departments, setDepartments] = useState([]);
 
@@ -69,6 +85,7 @@ export default function UserManagement({ user }) {
           password: formPassword,
           role: formRole,
           department: formDept,
+          permissions: formPermissions,
           actor_id: user?.id,
           actor_name: user?.name
         })
@@ -82,6 +99,7 @@ export default function UserManagement({ user }) {
         setFormPassword('');
         setFormRole('itstaff');
         setFormDept('');
+        setFormPermissions([]);
         fetchUsers();
       } else {
         alert('Lỗi: ' + json.error);
@@ -100,6 +118,7 @@ export default function UserManagement({ user }) {
         username: editUsername,
         role: editRole,
         department: editDept,
+        permissions: editPermissions,
         actor_id: user?.id,
         actor_name: user?.name
       };
@@ -150,6 +169,7 @@ export default function UserManagement({ user }) {
     setEditUsername(u.username);
     setEditRole(u.role);
     setEditDept(u.department || '');
+    setEditPermissions(u.permissions || []);
   };
 
   const filteredUsers = usersList.filter(u => 
@@ -192,6 +212,7 @@ export default function UserManagement({ user }) {
                 <th>Tên đăng nhập</th>
                 <th>Khoa / Phòng ban</th>
                 <th>Vai trò hệ thống</th>
+                <th>Quyền truy cập cụ thể</th>
                 <th>Thao tác</th>
               </tr>
             </thead>
@@ -221,6 +242,31 @@ export default function UserManagement({ user }) {
                     </span>
                   </td>
                   <td>
+                    {u.permissions && u.permissions.length > 0 ? (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', maxWidth: '250px' }}>
+                        {u.permissions.map(pid => {
+                          const perm = AVAILABLE_PERMISSIONS.find(ap => ap.id === pid);
+                          return (
+                            <span key={pid} style={{ 
+                              fontSize: '0.72rem', 
+                              padding: '2px 6px', 
+                              borderRadius: '4px', 
+                              background: 'rgba(255, 255, 255, 0.08)',
+                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                              color: 'var(--text-secondary)'
+                            }} title={perm ? perm.label : pid}>
+                              {perm ? `${perm.icon} ${perm.label}` : pid}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontStyle: 'italic' }}>
+                        Theo vai trò {u.role === 'admin' ? '(Tất cả)' : ''}
+                      </span>
+                    )}
+                  </td>
+                  <td>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => openEditModal(u)}>
                         ✏️ Sửa
@@ -240,7 +286,7 @@ export default function UserManagement({ user }) {
       {/* Modal: Add User */}
       {isAddOpen && (
         <div className="modal-overlay">
-          <div className="glass-card modal-content" style={{ maxWidth: '450px' }}>
+          <div className="glass-card modal-content" style={{ maxWidth: '650px', width: '95%' }}>
             <h3 style={{ marginBottom: '20px', fontSize: '1.2rem', fontWeight: 700 }}>Thêm tài khoản người dùng mới</h3>
             <form onSubmit={handleCreateUser}>
               <div className="form-group">
@@ -248,35 +294,100 @@ export default function UserManagement({ user }) {
                 <input type="text" required className="form-control" placeholder="Nguyễn Văn A" value={formName} onChange={e => setFormName(e.target.value)} />
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Tên đăng nhập (Username) *</label>
-                <input type="text" required className="form-control" placeholder="nguyenvana" value={formUsername} onChange={e => setFormUsername(e.target.value)} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group">
+                  <label className="form-label">Tên đăng nhập (Username) *</label>
+                  <input type="text" required className="form-control" placeholder="nguyenvana" value={formUsername} onChange={e => setFormUsername(e.target.value)} />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Mật khẩu khởi tạo *</label>
+                  <input type="password" required className="form-control" placeholder="Nhập mật khẩu..." value={formPassword} onChange={e => setFormPassword(e.target.value)} />
+                </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Mật khẩu khởi tạo *</label>
-                <input type="password" required className="form-control" placeholder="Nhập mật khẩu..." value={formPassword} onChange={e => setFormPassword(e.target.value)} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group">
+                  <label className="form-label">Vai trò truy cập</label>
+                  <select className="form-control" value={formRole} onChange={e => setFormRole(e.target.value)}>
+                    <option value="itstaff">Cán bộ IT (Kỹ thuật viên)</option>
+                    <option value="admin">Quản trị viên IT (QTV)</option>
+                    <option value="director">Ban Giám Đốc</option>
+                    <option value="accountant">Kế toán tài sản</option>
+                    <option value="depthead">Trưởng khoa / phòng</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Khoa / Phòng làm việc</label>
+                  <select className="form-control" value={formDept} onChange={e => setFormDept(e.target.value)}>
+                    <option value="">-- Chọn khoa/phòng --</option>
+                    {departments.map(d => (
+                      <option key={d.id} value={d.name}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Vai trò truy cập</label>
-                <select className="form-control" value={formRole} onChange={e => setFormRole(e.target.value)}>
-                  <option value="itstaff">Cán bộ IT (Kỹ thuật viên)</option>
-                  <option value="admin">Quản trị viên IT (QTV)</option>
-                  <option value="director">Ban Giám Đốc</option>
-                  <option value="accountant">Kế toán tài sản</option>
-                  <option value="depthead">Trưởng khoa / phòng</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Khoa / Phòng làm việc</label>
-                <select className="form-control" value={formDept} onChange={e => setFormDept(e.target.value)}>
-                  <option value="">-- Chọn khoa/phòng --</option>
-                  {departments.map(d => (
-                    <option key={d.id} value={d.name}>{d.name}</option>
-                  ))}
-                </select>
+              <div className="form-group" style={{ marginTop: '16px' }}>
+                <label className="form-label" style={{ fontWeight: 600, display: 'block', marginBottom: '8px' }}>
+                  Phân quyền chức năng cụ thể
+                  <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>
+                    (Nếu không chọn, hệ thống sẽ sử dụng quyền mặc định của vai trò)
+                  </span>
+                </label>
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', 
+                  gap: '10px', 
+                  maxHeight: '160px', 
+                  overflowY: 'auto', 
+                  padding: '12px', 
+                  background: 'rgba(255, 255, 255, 0.05)', 
+                  border: '1px solid rgba(255, 255, 255, 0.1)', 
+                  borderRadius: '8px',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)' 
+                }}>
+                  {AVAILABLE_PERMISSIONS.map(p => {
+                    const checked = formPermissions.includes(p.id);
+                    return (
+                      <label 
+                        key={p.id} 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '8px', 
+                          cursor: 'pointer',
+                          padding: '6px 8px',
+                          borderRadius: '6px',
+                          background: checked ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+                          border: `1px solid ${checked ? 'rgba(99, 102, 241, 0.3)' : 'transparent'}`,
+                          transition: 'all 0.2s ease',
+                          fontSize: '0.85rem'
+                        }}
+                      >
+                        <input 
+                          type="checkbox" 
+                          checked={checked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormPermissions([...formPermissions, p.id]);
+                            } else {
+                              setFormPermissions(formPermissions.filter(id => id !== p.id));
+                            }
+                          }}
+                          style={{
+                            accentColor: 'var(--accent-primary, #6366f1)',
+                            width: '16px',
+                            height: '16px',
+                            cursor: 'pointer'
+                          }}
+                        />
+                        <span>{p.icon} {p.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
@@ -291,7 +402,7 @@ export default function UserManagement({ user }) {
       {/* Modal: Edit User */}
       {editingUser && (
         <div className="modal-overlay">
-          <div className="glass-card modal-content" style={{ maxWidth: '450px' }}>
+          <div className="glass-card modal-content" style={{ maxWidth: '650px', width: '95%' }}>
             <h3 style={{ marginBottom: '20px', fontSize: '1.2rem', fontWeight: 700 }}>Chỉnh sửa thông tin tài khoản</h3>
             <form onSubmit={handleEditUser}>
               <div className="form-group">
@@ -299,35 +410,100 @@ export default function UserManagement({ user }) {
                 <input type="text" required className="form-control" value={editName} onChange={e => setEditName(e.target.value)} />
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Tên đăng nhập (Username) *</label>
-                <input type="text" required className="form-control" value={editUsername} onChange={e => setEditUsername(e.target.value)} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group">
+                  <label className="form-label">Tên đăng nhập (Username) *</label>
+                  <input type="text" required className="form-control" value={editUsername} onChange={e => setEditUsername(e.target.value)} />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Mật khẩu mới (Để trống nếu giữ nguyên)</label>
+                  <input type="password" className="form-control" placeholder="Nhập mật khẩu mới..." value={editPassword} onChange={e => setEditPassword(e.target.value)} />
+                </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Mật khẩu mới (Để trống nếu giữ nguyên)</label>
-                <input type="password" className="form-control" placeholder="Nhập mật khẩu mới..." value={editPassword} onChange={e => setEditPassword(e.target.value)} />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group">
+                  <label className="form-label">Vai trò truy cập</label>
+                  <select className="form-control" value={editRole} onChange={e => setEditRole(e.target.value)}>
+                    <option value="itstaff">Cán bộ IT (Kỹ thuật viên)</option>
+                    <option value="admin">Quản trị viên IT (QTV)</option>
+                    <option value="director">Ban Giám Đốc</option>
+                    <option value="accountant">Kế toán tài sản</option>
+                    <option value="depthead">Trưởng khoa / phòng</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Khoa / Phòng làm việc</label>
+                  <select className="form-control" value={editDept} onChange={e => setEditDept(e.target.value)}>
+                    <option value="">-- Chọn khoa/phòng --</option>
+                    {departments.map(d => (
+                      <option key={d.id} value={d.name}>{d.name}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Vai trò truy cập</label>
-                <select className="form-control" value={editRole} onChange={e => setEditRole(e.target.value)}>
-                  <option value="itstaff">Cán bộ IT (Kỹ thuật viên)</option>
-                  <option value="admin">Quản trị viên IT (QTV)</option>
-                  <option value="director">Ban Giám Đốc</option>
-                  <option value="accountant">Kế toán tài sản</option>
-                  <option value="depthead">Trưởng khoa / phòng</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Khoa / Phòng làm việc</label>
-                <select className="form-control" value={editDept} onChange={e => setEditDept(e.target.value)}>
-                  <option value="">-- Chọn khoa/phòng --</option>
-                  {departments.map(d => (
-                    <option key={d.id} value={d.name}>{d.name}</option>
-                  ))}
-                </select>
+              <div className="form-group" style={{ marginTop: '16px' }}>
+                <label className="form-label" style={{ fontWeight: 600, display: 'block', marginBottom: '8px' }}>
+                  Phân quyền chức năng cụ thể
+                  <span style={{ fontSize: '0.75rem', fontWeight: 400, color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>
+                    (Nếu không chọn, hệ thống sẽ sử dụng quyền mặc định của vai trò)
+                  </span>
+                </label>
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', 
+                  gap: '10px', 
+                  maxHeight: '160px', 
+                  overflowY: 'auto', 
+                  padding: '12px', 
+                  background: 'rgba(255, 255, 255, 0.05)', 
+                  border: '1px solid rgba(255, 255, 255, 0.1)', 
+                  borderRadius: '8px',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)' 
+                }}>
+                  {AVAILABLE_PERMISSIONS.map(p => {
+                    const checked = editPermissions.includes(p.id);
+                    return (
+                      <label 
+                        key={p.id} 
+                        style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '8px', 
+                          cursor: 'pointer',
+                          padding: '6px 8px',
+                          borderRadius: '6px',
+                          background: checked ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+                          border: `1px solid ${checked ? 'rgba(99, 102, 241, 0.3)' : 'transparent'}`,
+                          transition: 'all 0.2s ease',
+                          fontSize: '0.85rem'
+                        }}
+                      >
+                        <input 
+                          type="checkbox" 
+                          checked={checked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setEditPermissions([...editPermissions, p.id]);
+                            } else {
+                              setEditPermissions(editPermissions.filter(id => id !== p.id));
+                            }
+                          }}
+                          style={{
+                            accentColor: 'var(--accent-primary, #6366f1)',
+                            width: '16px',
+                            height: '16px',
+                            cursor: 'pointer'
+                          }}
+                        />
+                        <span>{p.icon} {p.label}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
 
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>

@@ -7,7 +7,7 @@ export async function POST(request) {
     // In production, use bcrypt/argon2 to verify password_hash
     // Since this is a specialized management app, we match plaintext password for simple setup
     const result = await query(
-      'SELECT id, username, role, name, department FROM users WHERE username = $1 AND password = $2',
+      'SELECT id, username, role, name, department, permissions FROM users WHERE username = $1 AND password = $2',
       [username, password]
     );
 

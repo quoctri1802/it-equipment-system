@@ -16,10 +16,19 @@ export default function Sidebar({ activeTab, setActiveTab, user, sidebarOpen, se
     { id: 'audit', label: 'Nhật ký thao tác', icon: '📜', roles: ['admin', 'director'] },
   ];
 
-  // Filter menu based on user role
-  const visibleItems = menuItems.filter(item => 
-    !user || item.roles.includes(user.role)
-  );
+  // Filter menu based on user permissions or fallback to role
+  const visibleItems = menuItems.filter(item => {
+    if (!user) return false;
+    if (user.role === 'admin') return true; // admin always has full access
+
+    // If permissions array is configured for the user, use it
+    if (Array.isArray(user.permissions) && user.permissions.length > 0) {
+      return user.permissions.includes(item.id);
+    }
+    
+    // Otherwise fallback to role-based check
+    return item.roles.includes(user.role);
+  });
 
   return (
     <div className={`sidebar ${sidebarOpen ? 'mobile-open' : ''}`}>
