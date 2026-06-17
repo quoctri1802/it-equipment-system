@@ -234,33 +234,13 @@ export async function initDatabase() {
       ('Nguồn máy tính 500W', 'power', 0, 2, 'Cái', 400000),
       ('Cáp mạng Cat6 Ugreen 3m', 'cable', 0, 10, 'Sợi', 45000);
     `);
-  } else {
-    // Reset quantities to 0 for all consumables
-    await query('UPDATE consumables SET current_qty = 0');
   }
 
-  // 1. Delete all transactional mock data unconditionally
-  console.log('Wiping all mock data from transactional tables...');
-  await query("DELETE FROM support_requests");
-  await query("DELETE FROM incidents");
-  await query("DELETE FROM maintenance_plans");
-  await query("DELETE FROM allocation_logs");
-  await query("DELETE FROM devices");
-  await query("DELETE FROM contracts");
-  await query("DELETE FROM consumable_logs");
-  await query("DELETE FROM audit_logs");
-
-  // 2. Delete all users except admin
-  await query("DELETE FROM users WHERE username != 'admin'");
-
-  // 3. Upsert admin user with the requested admin@123 password
+  // Ensure admin user exists with admin@123 password
   const adminCheck = await query("SELECT id FROM users WHERE username = 'admin'");
-  if (adminCheck.rows.length > 0) {
-    await query("UPDATE users SET password = $1, role = 'admin', name = $2, department = $3 WHERE username = 'admin'", ['admin@123', 'Quản Trị Viên', 'Phòng CNTT']);
-  } else {
+  if (adminCheck.rows.length === 0) {
     await query("INSERT INTO users (username, password, role, name, department) VALUES ($1, $2, $3, $4, $5)", ['admin', 'admin@123', 'admin', 'Quản Trị Viên', 'Phòng CNTT']);
   }
-  console.log('Database cleanup and admin user seeding completed successfully.');
 
   console.log('Database initialization completed successfully.');
 }

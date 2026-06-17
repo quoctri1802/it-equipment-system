@@ -1,5 +1,7 @@
 import { query } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     // 1. Device counts by status
