@@ -12,7 +12,7 @@ export default function Header({ user, onLogout, theme, onToggleTheme, onToggleS
             display: 'none',
             background: 'none',
             border: 'none',
-            color: 'white',
+            color: 'var(--text-primary)',
             fontSize: '1.6rem',
             cursor: 'pointer',
             padding: '4px',

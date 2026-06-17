@@ -21,11 +21,10 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
   // Scanner States
   const [scannedDevice, setScannedDevice] = useState(null);
   const [scannedDeviceHistory, setScannedDeviceHistory] = useState([]);
-  const [scannerMode, setScannerMode] = useState('simulated'); // simulated, real
-  const [simSelectedCode, setSimSelectedCode] = useState('');
+  const [scanPaused, setScanPaused] = useState(false);
   const [flashActive, setFlashActive] = useState(false);
   const [cameraPermission, setCameraPermission] = useState('prompt'); // prompt, granted, denied
-  const [scanMessage, setScanMessage] = useState('Đang đợi quét mã định danh...');
+  const [scanMessage, setScanMessage] = useState('Di chuyển camera đến mã QR trên thiết bị...');
 
   // Create Request Form States
   const [formRequestType, setFormRequestType] = useState('repair'); // repair, upgrade, borrow
@@ -119,15 +118,11 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
     fetchItStaff();
   }, [user]);
 
-  // Handle Real Camera Toggle
+  // Handle Real Camera on Mount
   useEffect(() => {
-    if (scannerMode === 'real') {
-      startCamera();
-    } else {
-      stopCamera();
-    }
+    startCamera();
     return () => stopCamera();
-  }, [scannerMode]);
+  }, []);
 
   // Real-time camera QR code decoding loop using jsQR
   useEffect(() => {
@@ -138,7 +133,7 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
       if (!active) return;
       
       const video = videoRef.current;
-      if (video && video.readyState === video.HAVE_ENOUGH_DATA && scannerMode === 'real') {
+      if (video && video.readyState === video.HAVE_ENOUGH_DATA && !scanPaused) {
         try {
           const canvas = document.createElement('canvas');
           canvas.width = video.videoWidth;
@@ -153,7 +148,7 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
           
           if (code && code.data) {
             handleScanDevice(code.data);
-            setScannerMode('simulated'); // Turn off camera to pause scanning
+            setScanPaused(true); // Pause scanning on success
             return;
           }
         } catch (err) {
@@ -161,12 +156,12 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
         }
       }
       
-      if (scannerMode === 'real') {
+      if (!scanPaused) {
         animationId = requestAnimationFrame(scanFrame);
       }
     };
     
-    if (scannerMode === 'real' && cameraPermission === 'granted') {
+    if (cameraPermission === 'granted' && !scanPaused) {
       animationId = requestAnimationFrame(scanFrame);
     }
     
@@ -176,7 +171,7 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
         cancelAnimationFrame(animationId);
       }
     };
-  }, [scannerMode, cameraPermission]);
+  }, [cameraPermission, scanPaused]);
 
   const startCamera = async () => {
     try {
@@ -189,12 +184,11 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
         videoRef.current.srcObject = stream;
       }
       setCameraPermission('granted');
-      setScanMessage('Đang mở camera camera di động. Đang dò mã QR...');
+      setScanMessage('Di chuyển camera đến mã QR trên thiết bị...');
     } catch (err) {
       console.error('Lỗi truy cập camera:', err);
       setCameraPermission('denied');
-      setScannerMode('simulated');
-      alert('Không thể truy cập camera. Hệ thống tự động chuyển sang chế độ Mô phỏng Quét mã QR.');
+      setScanMessage('Không thể truy cập camera. Vui lòng kiểm tra quyền camera trong cài đặt.');
     }
   };
 
@@ -258,6 +252,13 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
     } catch (err) {
       setScanMessage(`Lỗi khi tải thông tin thiết bị: ${err.message}`);
     }
+  };
+
+  const handleResetScan = () => {
+    setScannedDevice(null);
+    setScannedDeviceHistory([]);
+    setScanPaused(false);
+    setScanMessage('Di chuyển camera đến mã QR trên thiết bị...');
   };
 
   // IT Staff Quick Inventory Check
@@ -513,42 +514,11 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
               {activeMobileTab === 'scan' && (
                 <div className="mobile-tab-scroll-container">
                   
-                  {/* Mode select bar */}
-                  <div style={{ display: 'flex', gap: '6px', background: 'var(--bg-tertiary)', padding: '3px', borderRadius: '8px', fontSize: '0.7rem' }}>
-                    <button 
-                      className="btn" 
-                      style={{ flex: 1, padding: '4px', background: scannerMode === 'simulated' ? 'rgba(255,255,255,0.05)' : 'transparent', fontSize: '0.7rem', color: scannerMode === 'simulated' ? 'white' : 'var(--text-secondary)', border: 'none' }}
-                      onClick={() => setScannerMode('simulated')}
-                    >
-                      Mô phỏng QR
-                    </button>
-                    <button 
-                      className="btn" 
-                      style={{ flex: 1, padding: '4px', background: scannerMode === 'real' ? 'rgba(255,255,255,0.05)' : 'transparent', fontSize: '0.7rem', color: scannerMode === 'real' ? 'white' : 'var(--text-secondary)', border: 'none' }}
-                      onClick={() => setScannerMode('real')}
-                    >
-                      Bật Camera thật
-                    </button>
-                  </div>
-
                   {/* Scanning box */}
-                  <div className="scanner-viewport">
+                  <div className="scanner-viewport" style={{ display: scannedDevice ? 'none' : 'block' }}>
                     <div className={`scanner-beep-flash ${flashActive ? 'active' : ''}`} />
                     
-                    {scannerMode === 'real' ? (
-                      <video ref={videoRef} autoPlay playsInline muted className="scanner-camera-feed" />
-                    ) : (
-                      // Simulation background grid
-                      <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0e111d', gap: '10px' }}>
-                        <span style={{ fontSize: '2.5rem', animation: 'pulsateGently 2s infinite' }}>📸</span>
-                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.72rem', textAlign: 'center', padding: '0 20px', fontWeight: 600 }}>
-                          Chế độ mô phỏng quét mã QR thiết bị
-                        </div>
-                        <div style={{ color: 'var(--text-muted)', fontSize: '0.62rem', textAlign: 'center', padding: '0 20px' }}>
-                          Chọn một máy khám bên dưới để bắt đầu quét
-                        </div>
-                      </div>
-                    )}
+                    <video ref={videoRef} autoPlay playsInline muted className="scanner-camera-feed" />
 
                     <div className="scanner-overlay-guide">
                       <div className="scanner-box">
@@ -561,37 +531,9 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
                   </div>
 
                   {/* Scan Info Display */}
-                  <div style={{ background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.7rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
-                    {scanMessage}
-                  </div>
-
-                  {/* Simulator Device select dropdown */}
-                  {scannerMode === 'simulated' && (
-                    <div style={{ background: 'var(--bg-tertiary)', padding: '12px', borderRadius: '12px', display: 'flex', flexDirection: 'column', gap: '8px', border: '1px solid var(--border-color)' }}>
-                      <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--accent-secondary)' }}>Chọn thiết bị mô phỏng quét mã:</label>
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        <select 
-                          className="form-control" 
-                          style={{ fontSize: '0.7rem', padding: '6px', height: 'auto', flex: 1 }}
-                          value={simSelectedCode}
-                          onChange={e => setSimSelectedCode(e.target.value)}
-                        >
-                          <option value="">-- Chọn máy khám quét thử --</option>
-                          <option value="TBYT-PC-001">PC-001 (Máy Dell - Cấp Cứu)</option>
-                          <option value="TBYT-PC-002">PC-002 (Máy Dell - Khám Bệnh)</option>
-                          <option value="TBYT-PR-001">PR-001 (Máy in Canon - Cấp Cứu)</option>
-                          <option value="TBYT-SRV-001">SRV-001 (Core HIS - Phòng Máy Chủ)</option>
-                        </select>
-                        <button 
-                          type="button" 
-                          className="btn btn-primary"
-                          style={{ padding: '6px 12px', fontSize: '0.7rem' }}
-                          onClick={() => handleScanDevice(simSelectedCode)}
-                          disabled={!simSelectedCode}
-                        >
-                          Quét
-                        </button>
-                      </div>
+                  {!scannedDevice && (
+                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.7rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                      {scanMessage}
                     </div>
                   )}
 
@@ -698,6 +640,18 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
                             </button>
                           </div>
                         )}
+
+                        {/* Reset scan button */}
+                        <div style={{ display: 'flex', gap: '8px', marginTop: '2px' }}>
+                          <button 
+                            type="button"
+                            className="btn btn-secondary" 
+                            style={{ flex: 1, padding: '8px', fontSize: '0.7rem', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}
+                            onClick={handleResetScan}
+                          >
+                            🔄 Quét thiết bị khác
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -839,7 +793,6 @@ export default function SelfServicePortal({ user, initialScanCode, onClearInitia
                           key={d.id} 
                           style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '8px', cursor: 'pointer' }}
                           onClick={() => {
-                            setSimSelectedCode(d.asset_code);
                             handleScanDevice(d.asset_code);
                             setActiveMobileTab('scan');
                           }}

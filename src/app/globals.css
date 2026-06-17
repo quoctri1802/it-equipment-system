@@ -1265,6 +1265,19 @@ input:-webkit-autofill:active {
   margin-top: 4px;
 }
 
+/* Sidebar Backdrop Overlay on Mobile */
+.sidebar-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 98; /* Under sidebar (100) but above header (90) and page content */
+  animation: fadeIn 0.2s ease-out;
+}
+
 /* ==========================================
    MOBILE & RESPONSIVE LAYOUT OVERRIDES 
    ========================================== */

@@ -32,7 +32,7 @@ export default function Sidebar({ activeTab, setActiveTab, user, sidebarOpen, se
           right: '20px',
           background: 'none',
           border: 'none',
-          color: 'white',
+          color: 'var(--text-sidebar)',
           fontSize: '1.4rem',
           cursor: 'pointer',
           zIndex: 110

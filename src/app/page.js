@@ -111,6 +111,11 @@ export default function Home() {
 
   return (
     <div className="app-container">
+      {/* Backdrop overlay on mobile */}
+      {sidebarOpen && (
+        <div className="sidebar-backdrop" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* Sidebar navigation */}
       <Sidebar activeTab={activeTab} setActiveTab={(tab) => { setActiveTab(tab); setSidebarOpen(false); }} user={user} sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
