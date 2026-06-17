@@ -8,13 +8,31 @@ export default function Reports({ user }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
 
-  const fetchReportsData = async () => {
+  const [deptFilter, setDeptFilter] = useState('');
+  const [catFilter, setCatFilter] = useState('');
+  const [departments, setDepartments] = useState([]);
+  const [categories, setCategories] = useState([]);
+
+  const fetchReportsData = async (dept = '', cat = '') => {
     try {
       setLoading(true);
-      const res = await fetch('/api/reports');
+      const queryParams = new URLSearchParams();
+      if (dept) queryParams.append('department', dept);
+      if (cat) queryParams.append('category', cat);
+
+      const res = await fetch(`/api/reports?${queryParams.toString()}`);
       const json = await res.json();
       if (json.success) {
         setReportData(json.data);
+        // Lưu trữ danh sách đầy đủ ban đầu cho các dropdown lọc
+        if (!dept && !cat) {
+          if (json.data.deptBreakdown) {
+            setDepartments(json.data.deptBreakdown.map(d => d.department));
+          }
+          if (json.data.categoryBreakdown) {
+            setCategories(json.data.categoryBreakdown.map(c => c.category_name));
+          }
+        }
       } else {
         setError(json.error);
       }
@@ -173,6 +191,61 @@ export default function Reports({ user }) {
           <h2 style={{ fontSize: '1.6rem', fontWeight: 800, color: 'white' }}>Báo cáo & Thống kê thiết bị</h2>
           <p style={{ color: 'var(--text-secondary)' }}>Xuất dữ liệu, in báo cáo định kỳ tình trạng phần cứng, sự cố và khấu hao tài sản CNTT.</p>
         </div>
+      </div>
+
+      {/* Filter Options Bar */}
+      <div className="glass-card" style={{ padding: '16px', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center', background: 'rgba(255,255,255,0.02)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>🏢 Lọc theo Khoa/Phòng:</span>
+          <select 
+            className="form-control" 
+            style={{ width: '220px', padding: '6px 12px' }}
+            value={deptFilter}
+            onChange={(e) => {
+              const val = e.target.value;
+              setDeptFilter(val);
+              fetchReportsData(val, catFilter);
+            }}
+          >
+            <option value="">-- Tất cả khoa/phòng --</option>
+            {departments.map((dept, idx) => (
+              <option key={idx} value={dept}>{dept}</option>
+            ))}
+          </select>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>💻 Lọc theo Loại thiết bị:</span>
+          <select 
+            className="form-control" 
+            style={{ width: '220px', padding: '6px 12px' }}
+            value={catFilter}
+            onChange={(e) => {
+              const val = e.target.value;
+              setCatFilter(val);
+              fetchReportsData(deptFilter, val);
+            }}
+          >
+            <option value="">-- Tất cả loại thiết bị --</option>
+            {categories.map((cat, idx) => (
+              <option key={idx} value={cat}>{cat}</option>
+            ))}
+          </select>
+        </div>
+
+        {(deptFilter || catFilter) && (
+          <button 
+            className="btn btn-secondary" 
+            style={{ padding: '6px 16px', fontSize: '0.85rem', borderColor: 'var(--accent-primary)', color: 'var(--accent-primary)' }}
+            onClick={() => {
+              setDeptFilter('');
+              setCatFilter('');
+              fetchReportsData('', '');
+            }}
+          >
+            🧹 Xóa bộ lọc
+          </button>
+        )}
       </div>
 
       {/* Main KPI Stats Block */}
